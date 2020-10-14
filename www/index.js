@@ -9,23 +9,23 @@ import { GameState, Key } from "bomberhuman";
 /// `Key` is imported from WASM
 const KeyBind = {
   // Player 1
-  "ArrowLeft":  Key.Left,
-  "ArrowRight": Key.Right,
-  "ArrowUp":    Key.Up,
-  "ArrowDown":  Key.Down,
+  "ArrowLeft":  [0, Key.Left],
+  "ArrowRight": [0, Key.Right],
+  "ArrowUp":    [0, Key.Up],
+  "ArrowDown":  [0, Key.Down],
 
   // Player 2
-  "a":          Key.Left,
-  "s":          Key.Right,
-  "w":          Key.Up,
-  "x":          Key.Down
+  "a":          [1, Key.Left],
+  "s":          [1, Key.Right],
+  "w":          [1, Key.Up],
+  "x":          [1, Key.Down],
 };
 
 function process_key(key, state) {
   if (debug) console.log(key);
   let bind = KeyBind[key];
   if (bind)
-    gs.toggle_key(bind, state);
+    gs.toggle_key(bind[0], bind[1], state);
 }
 
 ////////////////////////////////////////////////////////////////

@@ -25,16 +25,18 @@ pub enum ClassId {
 /// Player
 
 struct Player {
-    id: ClassId,
+    class_id: ClassId,
+    id: u32,
     action: u32,
     x: i32,
     y: i32,
 }
 
 impl Player {
-    pub fn new(x: i32, y: i32) -> Self {
+    pub fn new(id: u32, x: i32, y: i32) -> Self {
         Player {
-            id: ClassId::Player,
+            id,
+            class_id: ClassId::Player,
             action: 0,
             x,
             y,
@@ -42,7 +44,7 @@ impl Player {
     }
 
     pub fn draw(&self) {
-        screen_put_sprite(self.x, self.y, self.id, self.action)
+        screen_put_sprite(self.x, self.y, self.class_id, self.action)
     }
 
     pub fn update(&mut self, delta: i32, key_state: &KeyState) {
@@ -106,7 +108,7 @@ impl KeyState {
 pub struct GameState {
     pub width: u32,
     pub height: u32,
-    key_state: KeyState,
+    key_states: Vec<KeyState>,
     players: Vec<Player>,
 }
 
@@ -116,14 +118,14 @@ impl GameState {
         GameState {
             width,
             height,
-            key_state: KeyState::new(),
-            players: vec![Player::new(450, 380)],
+            key_states: vec![KeyState::new(), KeyState::new()],
+            players: vec![Player::new(0, 450, 380), Player::new(1, 0, 0)],
         }
     }
 
     pub fn update(&mut self, delta: i32) {
         for p in &mut self.players {
-            p.update(delta, &self.key_state);
+            p.update(delta, &self.key_states[p.id as usize]);
         }
     }
 
@@ -134,12 +136,13 @@ impl GameState {
         }
     }
 
-    pub fn toggle_key(&mut self, key: Key, state: bool) {
+    pub fn toggle_key(&mut self, bind: u32, key: Key, state: bool) {
+        let bind = bind as usize;
         match key {
-            Key::Left => self.key_state.left = state,
-            Key::Right => self.key_state.right = state,
-            Key::Up => self.key_state.up = state,
-            Key::Down => self.key_state.down = state,
+            Key::Left => self.key_states[bind].left = state,
+            Key::Right => self.key_states[bind].right = state,
+            Key::Up => self.key_states[bind].up = state,
+            Key::Down => self.key_states[bind].down = state,
         }
     }
 }
