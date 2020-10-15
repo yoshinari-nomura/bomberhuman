@@ -134,7 +134,6 @@ impl Player {
     }
 }
 
-
 /// Keyboard
 
 #[wasm_bindgen]
@@ -166,7 +165,6 @@ impl KeyState {
         }
     }
 }
-
 
 /// Game State
 
