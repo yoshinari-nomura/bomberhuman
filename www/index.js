@@ -13,12 +13,14 @@ const KeyBind = {
   "ArrowRight": [0, Key.Right],
   "ArrowUp":    [0, Key.Up],
   "ArrowDown":  [0, Key.Down],
+  " ":          [0, Key.Button1],
 
   // Player 2
   "a":          [1, Key.Left],
   "s":          [1, Key.Right],
   "w":          [1, Key.Up],
   "x":          [1, Key.Down],
+  "b":          [1, Key.Button1],
 };
 
 function process_key(key, state) {
