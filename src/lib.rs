@@ -10,7 +10,7 @@ use web_sys::console::*;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-#[wasm_bindgen(module = "/screen.js")]
+#[wasm_bindgen(module = "/src/javascripts/screen.js")]
 extern "C" {
     fn screen_put_sprite(x: i32, y: i32, class_id: ClassId, action: u32);
     fn screen_clear_rect(x: i32, y: i32, width: u32, height: u32);
