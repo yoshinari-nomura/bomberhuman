@@ -2,7 +2,6 @@ mod utils;
 
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
-use web_sys::console::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -14,14 +13,6 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 extern "C" {
     fn screen_put_sprite(x: i32, y: i32, class_id: ClassId, action: u32);
     fn screen_clear_rect(x: i32, y: i32, width: u32, height: u32);
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-macro_rules! console_log {
-    ( $( $t:tt )* ) => {
-        web_sys::console::log_1(&format!( $( $t )* ).into());
-    }
 }
 
 /// Character ID for mapping to Sprite
