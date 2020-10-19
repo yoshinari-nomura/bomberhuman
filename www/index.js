@@ -17,10 +17,10 @@ const KeyBind = {
 
   // Player 2
   "a":          [1, Key.Left],
-  "s":          [1, Key.Right],
+  "d":          [1, Key.Right],
   "w":          [1, Key.Up],
-  "x":          [1, Key.Down],
-  "b":          [1, Key.Button1],
+  "s":          [1, Key.Down],
+  "q":          [1, Key.Button1],
 };
 
 function process_key(key, state) {
