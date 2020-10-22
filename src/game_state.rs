@@ -5,6 +5,7 @@ use crate::screen::*;
 use crate::*;
 use actors::block::Block;
 use actors::bomb::Bomb;
+use actors::fire::Fire;
 use actors::player::Player;
 use keyboard::*;
 
@@ -15,9 +16,10 @@ pub struct GameState {
     pub width: u32,
     pub height: u32,
     key_states: Vec<KeyState>,
-    players: RefCell<Vec<Player>>,
-    bombs: RefCell<Vec<Bomb>>,
     blocks: RefCell<Vec<Block>>,
+    bombs: RefCell<Vec<Bomb>>,
+    fires: RefCell<Vec<Fire>>,
+    players: RefCell<Vec<Player>>,
 }
 
 #[wasm_bindgen]
@@ -54,6 +56,7 @@ impl GameState {
             players: RefCell::new(players),
             bombs: RefCell::new(vec![]),
             blocks: RefCell::new(blocks),
+            fires: RefCell::new(vec![]),
         }
     }
 
@@ -65,10 +68,13 @@ impl GameState {
             p.update(delta, gs, &self.key_states[p.id as usize]);
         }
         for b in &mut *self.bombs_mut() {
-            b.update(delta);
+            b.update(delta, gs)
         }
         for b in &mut *self.blocks_mut() {
             b.update(delta);
+        }
+        for f in &mut *self.fires_mut() {
+            f.update(delta);
         }
         self.cleanup()
     }
@@ -83,6 +89,9 @@ impl GameState {
         }
         for w in &*self.blocks() {
             w.draw();
+        }
+        for f in &*self.fires() {
+            f.draw();
         }
     }
 
@@ -123,6 +132,14 @@ impl GameState {
         self.players.borrow_mut()
     }
 
+    pub fn fires(&self) -> Ref<Vec<Fire>> {
+        self.fires.borrow()
+    }
+
+    pub fn fires_mut(&self) -> RefMut<Vec<Fire>> {
+        self.fires.borrow_mut()
+    }
+
     fn cleanup(&mut self) {
         let mut bombs = self.bombs_mut();
         let mut i = 0;
@@ -130,7 +147,41 @@ impl GameState {
             if bombs[i].alive() {
                 i += 1;
             } else {
+                self.fire(bombs[i].x, bombs[i].y, 5);
                 bombs.swap_remove(i);
+            }
+        }
+
+        let mut fires = self.fires_mut();
+        let mut i = 0;
+        while i < fires.len() {
+            if fires[i].alive() {
+                i += 1;
+            } else {
+                fires.swap_remove(i);
+            }
+        }
+    }
+
+    fn fire(&self, x: i32, y: i32, power: u8) {
+        let mut fires = self.fires_mut();
+        let (sx, sy) = ((x + 30) / 60 * 60, (y + 30) / 60 * 60);
+        let mut p;
+        let mut x;
+        let mut y;
+        for (dx, dy) in &[(0, -60), (0, 60), (-60, 0), (60, 0)] {
+            p = power;
+            x = sx;
+            y = sy;
+            loop {
+                let block_exists = self.blocks().iter().any(|b| b.x == x && b.y == y);
+                if block_exists || p == 0 {
+                    break;
+                }
+                fires.push(Fire::new(x, y));
+                p -= 1;
+                x += dx;
+                y += dy;
             }
         }
     }

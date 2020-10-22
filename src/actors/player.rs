@@ -10,16 +10,25 @@ pub struct Player {
     actor_id: ActorId,
     pub id: u32,
     action: u32,
+    ttl: i32,
     x: i32,
     y: i32,
 }
 
 impl Player {
     pub fn new(id: u32, x: i32, y: i32) -> Self {
+        let actor_id = match id {
+            0 => ActorId::Player1,
+            1 => ActorId::Player2,
+            2 => ActorId::Player3,
+            3 => ActorId::Player4,
+            _ => ActorId::Player1,
+        };
         Player {
             id,
-            actor_id: ActorId::Player,
+            actor_id,
             action: 0,
+            ttl: 1,
             x,
             y,
         }
@@ -29,7 +38,15 @@ impl Player {
         screen_put_sprite(self.x, self.y, self.actor_id, self.action)
     }
 
+    pub fn alive(&self) -> bool {
+        self.ttl > 0
+    }
+
     pub fn update(&mut self, delta: i32, gs: &GameState, key_state: &KeyState) {
+        if !self.alive() {
+            self.ttl += 1;
+            return;
+        }
         let speed = delta / 3; // 1frame = 16ms, speed should be 5 or so.
         let mut action = 0;
         let mut dx = 0;
@@ -94,6 +111,15 @@ impl Player {
         }
         self.x += dx;
         self.y += dy;
+
+        let fire_exists = gs
+            .fires()
+            .iter()
+            .any(|f| (f.x - self.x).abs() < 60 && (f.y - self.y).abs() < 60);
+        if fire_exists {
+            self.action = 15;
+            self.ttl = -60 * 8;
+        }
     }
 
     /// Correct the direction vector to go through the nearest grid center

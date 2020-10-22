@@ -1,4 +1,5 @@
 use crate::actors::*;
+use crate::game_state::*;
 
 /// Bomb
 
@@ -17,6 +18,7 @@ impl Bomb {
             actor_id: ActorId::Bomb,
             action: 0,
             ttl: 300,
+            /// who put the bomb
             player_id,
             x,
             y,
@@ -31,12 +33,17 @@ impl Bomb {
         screen_put_sprite(self.x, self.y, self.actor_id, self.action)
     }
 
-    pub fn update(&mut self, delta: i32) {
+    pub fn update(&mut self, delta: i32, gs: &GameState) {
+        let fire_exists = gs.fires().iter().any(|f| f.x == self.x && f.y == self.y);
+
         self.ttl = if self.ttl > delta / 10 {
             self.ttl - delta / 10
         } else {
             0
         };
+        if fire_exists && self.ttl > 5 {
+            self.ttl = 5;
+        }
         self.action = (300 - self.ttl) as u32 * 15 / 300;
     }
 }
