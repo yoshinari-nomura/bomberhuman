@@ -3,6 +3,7 @@ pub mod utils;
 
 pub mod actors;
 pub mod game_state;
+#[macro_use]
 pub mod geometry;
 pub mod keyboard;
 pub mod screen;

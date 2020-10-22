@@ -1,11 +1,31 @@
 /// Geometry
 use std::ops::{Add, Mul};
 
+#[allow(unused_macros)]
+#[macro_export]
+macro_rules! pnt {
+    ($x:expr, $y:expr) => {{
+        let x: i32 = $x;
+        let y: i32 = $y;
+        $crate::geometry::Point::new(x, y)
+    }};
+}
+
+#[allow(unused_macros)]
+#[macro_export]
+macro_rules! grd {
+    ($x:expr, $y:expr) => {{
+        let x: i32 = $x;
+        let y: i32 = $y;
+        $crate::geometry::Grid::new(x, y)
+    }};
+}
+
 /// Point
 
 pub const GS: i32 = 60;
 
-#[derive(Clone, Default, Copy)]
+#[derive(Clone, Default, Copy, Debug)]
 pub struct Point {
     pub x: i32,
     pub y: i32,
@@ -78,7 +98,7 @@ impl Mul for Point {
 
 /// Grid
 
-#[derive(Clone, Default, Copy)]
+#[derive(Clone, Default, Copy, Debug)]
 pub struct Grid {
     pub x: i32,
     pub y: i32,
@@ -101,6 +121,12 @@ impl Grid {
     }
 }
 
+impl PartialEq for Grid {
+    fn eq(&self, rhs: &Self) -> bool {
+        (self.x == rhs.x) && (self.y == rhs.y)
+    }
+}
+
 /// Vector
 
 #[derive(Clone, Default, Copy)]
@@ -110,3 +136,13 @@ pub struct Vector {
 }
 
 impl Vector {}
+
+#[test]
+fn pos_macro_test() {
+    assert_eq!(pos!(1, 2), crate::geometry::Point::new(1, 2))
+}
+
+#[test]
+fn grd_macro_test() {
+    assert_eq!(grd!(1, 2), crate::geometry::Grid::new(1, 2))
+}
