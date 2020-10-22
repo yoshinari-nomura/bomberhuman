@@ -45,14 +45,19 @@ impl GameState {
 
         // Create players
         let mut players = vec![];
-        for (i, grid) in [(13, 11), (1, 1)].iter().enumerate() {
+        for (i, grid) in [(13, 11), (1, 1), (13, 1), (1, 11)].iter().enumerate() {
             players.push(Player::new(i as u32, grid.0 * 60, grid.1 * 60));
         }
 
         GameState {
             width,
             height,
-            key_states: vec![KeyState::new(), KeyState::new()],
+            key_states: vec![
+                KeyState::new(),
+                KeyState::new(),
+                KeyState::new(),
+                KeyState::new(),
+            ],
             players: RefCell::new(players),
             bombs: RefCell::new(vec![]),
             blocks: RefCell::new(blocks),

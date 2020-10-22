@@ -21,6 +21,20 @@ const KeyBind = {
   "w":          [1, Key.Up],
   "s":          [1, Key.Down],
   "q":          [1, Key.Button1],
+
+  // Player 3
+  "h":          [2, Key.Left],
+  "l":          [2, Key.Right],
+  "k":          [2, Key.Up],
+  "j":          [2, Key.Down],
+  "u":          [2, Key.Button1],
+
+  // Player 4
+  "1":          [3, Key.Left],
+  "2":          [3, Key.Right],
+  "3":          [3, Key.Up],
+  "4":          [3, Key.Down],
+  "5":          [3, Key.Button1],
 };
 
 function process_key(key, state) {
