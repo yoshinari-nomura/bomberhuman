@@ -3,6 +3,8 @@ use std::ops::{Add, Mul};
 
 /// Point
 
+pub const GS: i32 = 60;
+
 #[derive(Clone, Default, Copy)]
 pub struct Point {
     pub x: i32,
@@ -16,29 +18,29 @@ impl Point {
 
     pub fn from_grid(g: Grid) -> Self {
         Point {
-            x: g.x * 60,
-            y: g.y * 60,
+            x: g.x * GS,
+            y: g.y * GS,
         }
     }
 
     /// Return nearest Point on grid.
     pub fn align_to_grid(&self) -> Point {
-        Point::new((self.x + 30) / 60 * 60, (self.y + 30) / 60 * 60)
+        Point::new((self.x + (GS / 2)) / GS * GS, (self.y + (GS / 2)) / GS * GS)
     }
 
     pub fn to_grid(&self) -> Grid {
-        Grid::new((self.x + 30) / 60 * 60, (self.y + 30) / 60 * 60)
+        Grid::new((self.x + (GS / 2)) / GS * GS, (self.y + (GS / 2)) / GS * GS)
     }
 
     pub fn to_x_connecting_grid(&self) -> Grid {
-        let (gx, gy) = ((self.x + 30) / 60, (self.y + 30) / 60);
-        let (sx, _sy) = ((self.x - gx * 60).signum(), (self.y - gy * 60).signum());
+        let (gx, gy) = ((self.x + (GS / 2)) / GS, (self.y + (GS / 2)) / GS);
+        let (sx, _sy) = ((self.x - gx * GS).signum(), (self.y - gy * GS).signum());
         Grid::new(gx + sx, gy)
     }
 
     pub fn to_y_connecting_grid(&self) -> Grid {
-        let (gx, gy) = ((self.x + 30) / 60, (self.y + 30) / 60);
-        let (_sx, sy) = ((self.x - gx * 60).signum(), (self.y - gy * 60).signum());
+        let (gx, gy) = ((self.x + (GS / 2)) / GS, (self.y + (GS / 2)) / GS);
+        let (_sx, sy) = ((self.x - gx * GS).signum(), (self.y - gy * GS).signum());
         Grid::new(gx, gy + sy)
     }
 
@@ -89,13 +91,13 @@ impl Grid {
 
     pub fn from_point(p: Point) -> Self {
         Grid {
-            x: (p.x + 30) / 60,
-            y: (p.y + 30) / 60,
+            x: (p.x + (GS / 2)) / GS,
+            y: (p.y + (GS / 2)) / GS,
         }
     }
 
     pub fn to_point(&self) -> Point {
-        Point::new(self.x * 60, self.y * 60)
+        Point::new(self.x * GS, self.y * GS)
     }
 }
 

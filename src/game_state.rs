@@ -1,6 +1,7 @@
 use std::cell::{Ref, RefCell, RefMut};
 use wasm_bindgen::prelude::*;
 
+use crate::geometry::*;
 use crate::screen::*;
 use crate::*;
 use actors::block::Block;
@@ -31,14 +32,14 @@ impl GameState {
         for y in 0..13 {
             for x in 0..15 {
                 if x == 0 || x == 14 || y == 0 || y == 12 {
-                    let block = Block::new(x * 60, y * 60);
+                    let block = Block::new(x * GS, y * GS);
                     blocks.push(block);
                 }
             }
         }
         for x in &[2, 4, 6, 8, 10, 12] {
             for y in &[2, 4, 6, 8, 10] {
-                let block = Block::new(x * 60, y * 60);
+                let block = Block::new(x * GS, y * GS);
                 blocks.push(block);
             }
         }
@@ -46,7 +47,7 @@ impl GameState {
         // Create players
         let mut players = vec![];
         for (i, grid) in [(13, 11), (1, 1), (13, 1), (1, 11)].iter().enumerate() {
-            players.push(Player::new(i as u32, grid.0 * 60, grid.1 * 60));
+            players.push(Player::new(i as u32, grid.0 * GS, grid.1 * GS));
         }
 
         GameState {
@@ -170,11 +171,11 @@ impl GameState {
 
     fn fire(&self, x: i32, y: i32, power: u8) {
         let mut fires = self.fires_mut();
-        let (sx, sy) = ((x + 30) / 60 * 60, (y + 30) / 60 * 60);
+        let (sx, sy) = ((x + (GS / 2)) / GS * GS, (y + (GS / 2)) / GS * GS);
         let mut p;
         let mut x;
         let mut y;
-        for (dx, dy) in &[(0, -60), (0, 60), (-60, 0), (60, 0)] {
+        for (dx, dy) in &[(0, -GS), (0, GS), (-GS, 0), (GS, 0)] {
             p = power;
             x = sx;
             y = sy;
