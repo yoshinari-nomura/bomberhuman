@@ -1,6 +1,44 @@
-/// Geometry
-use std::ops::{Add, Mul};
+//! Geometry
 
+use std::ops::{Add, Mul, Sub};
+
+/// Grid size: Width and height of each Grid
+///
+/// In this game, almost all game characters (actors) are to be
+/// located on the centers of grids like (n * GS, m * GS).
+///
+/// This also means that every character has the size of GS x GS.
+pub const GS: i32 = 60;
+
+/// Point: (x, y) style location, also known as Vector or Grid
+///
+/// Since almost all game characters (actors) are to be located on the
+/// centers of grids, Point has some alignment functions and macros
+/// such as `align_to_grid`, `grd!`, `vector_toward_grid`
+///
+/// # Examples
+///
+/// ```
+/// # #[macro_use] extern crate bomberhuman; fn main() {
+/// use bomberhuman::geometry::*;
+///
+/// let pnt = Point::new(0, 0);
+/// assert_eq!(pnt, pnt!(0, 0));
+/// assert_eq!(pnt.is_zero(), true);
+///
+/// let grd = grd!(115, 160);
+/// assert_eq!(pnt!(120, 180), grd); // grid size (GS) is 60
+/// assert_eq!(pnt!(115, 160).align_to_grid(), grd!(120, 180));
+/// # }
+/// ```
+///
+#[derive(Clone, Default, Copy, Debug)]
+pub struct Point {
+    pub x: i32,
+    pub y: i32,
+}
+
+/// Short version of Point::new(x, y)
 #[allow(unused_macros)]
 #[macro_export]
 macro_rules! pnt {
@@ -11,64 +49,93 @@ macro_rules! pnt {
     }};
 }
 
+/// Short version of Point::new(x, y).align_to_grid();
 #[allow(unused_macros)]
 #[macro_export]
 macro_rules! grd {
     ($x:expr, $y:expr) => {{
         let x: i32 = $x;
         let y: i32 = $y;
-        $crate::geometry::Grid::new(x, y)
+        pnt!((x + GS / 2) / GS * GS, (y + GS / 2) / GS * GS)
     }};
 }
 
-/// Point
-
-pub const GS: i32 = 60;
-
-#[derive(Clone, Default, Copy, Debug)]
-pub struct Point {
-    pub x: i32,
-    pub y: i32,
-}
-
 impl Point {
+    /// Construct Point with x, y
     pub fn new(x: i32, y: i32) -> Self {
         Point { x, y }
     }
 
-    pub fn from_grid(g: Grid) -> Self {
-        Point {
-            x: g.x * GS,
-            y: g.y * GS,
-        }
+    /// Create the nearest grid point.
+    pub fn align_to_grid(&self) -> Grid {
+        grd!(self.x, self.y)
     }
 
-    /// Return nearest Point on grid.
-    pub fn align_to_grid(&self) -> Point {
-        Point::new((self.x + (GS / 2)) / GS * GS, (self.y + (GS / 2)) / GS * GS)
-    }
-
-    pub fn to_grid(&self) -> Grid {
-        Grid::new((self.x + (GS / 2)) / GS * GS, (self.y + (GS / 2)) / GS * GS)
-    }
-
-    pub fn to_x_connecting_grid(&self) -> Grid {
-        let (gx, gy) = ((self.x + (GS / 2)) / GS, (self.y + (GS / 2)) / GS);
-        let (sx, _sy) = ((self.x - gx * GS).signum(), (self.y - gy * GS).signum());
-        Grid::new(gx + sx, gy)
-    }
-
-    pub fn to_y_connecting_grid(&self) -> Grid {
-        let (gx, gy) = ((self.x + (GS / 2)) / GS, (self.y + (GS / 2)) / GS);
-        let (_sx, sy) = ((self.x - gx * GS).signum(), (self.y - gy * GS).signum());
-        Grid::new(gx, gy + sy)
-    }
-
-    pub fn equal_zero(&self) -> bool {
+    /// Predicate the point equals to (0, 0)
+    pub fn is_zero(&self) -> bool {
         self.x == 0 && self.y == 0
+    }
+
+    /// Convert the point into tuple (x, y)
+    pub fn to_tuple(&self) -> (i32, i32) {
+        (self.x, self.y)
+    }
+
+    /// Calculate Vector toward the nearest grid point
+    pub fn vector_toward_grid(&self) -> Vector {
+        self.align_to_grid() - *self
+    }
+
+    /// Predicate the point collides with `pnt`
+    pub fn collides_with(&self, pnt: Point) -> bool {
+        (self.x - pnt.x).abs() < GS && (self.y - pnt.y).abs() < GS
+    }
+
+    /// Correct the direction vector to go through the nearest grid center
+    ///
+    /// # Algorism
+    ///
+    /// 1. Let (dx, dy) be the original vector and (gx, gy) be the
+    ///    vector from its current position (x, y) to the nearest grid.
+    /// 2. Let θ be the angle formed by (dx, dy) and (gx, gy)
+    /// 3. if θ is within ±90 degrees (inner product is 0 or greater) → (gx, gy).
+    /// 4. else, use (dx, dy)
+    ///
+    pub fn align_vector_to_grid(&self, v: Vector) -> Point {
+        let c = self.align_to_grid();
+        let mut g = c - *self;
+        let ip = g * v;
+        let speed = if v.x.abs() > v.y.abs() {
+            v.x.abs()
+        } else {
+            v.y.abs()
+        };
+
+        // It's not moving or already on the grid
+        if v.is_zero() || g.is_zero() {
+            return v;
+        }
+
+        if ip >= 0 {
+            // Within 90 degree angle to the center of grid,
+            // make it go to the center of the grid.
+
+            // Clip the size of the vector to less than the original speed.
+            if g.x.abs() > speed {
+                g.x = g.x.signum() * speed;
+            }
+            if g.y.abs() > speed {
+                g.y = g.y.signum() * speed;
+            }
+            g
+        } else {
+            // It's moving away from the center of grid.
+            v
+        }
     }
 }
 
+/// Implements '==' operator for Point == Point
 impl PartialEq for Point {
     fn eq(&self, rhs: &Self) -> bool {
         (self.x == rhs.x) && (self.y == rhs.y)
@@ -87,6 +154,18 @@ impl Add for Point {
     }
 }
 
+/// Implements the '-' operator for Point + Point
+impl Sub for Point {
+    type Output = Point;
+
+    fn sub(self, rhs: Point) -> Point {
+        Point {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+        }
+    }
+}
+
 /// Implements the '*' (Inner Product) operator for Point * Point
 impl Mul for Point {
     type Output = i32;
@@ -97,52 +176,7 @@ impl Mul for Point {
 }
 
 /// Grid
-
-#[derive(Clone, Default, Copy, Debug)]
-pub struct Grid {
-    pub x: i32,
-    pub y: i32,
-}
-
-impl Grid {
-    pub fn new(x: i32, y: i32) -> Self {
-        Grid { x, y }
-    }
-
-    pub fn from_point(p: Point) -> Self {
-        Grid {
-            x: (p.x + (GS / 2)) / GS,
-            y: (p.y + (GS / 2)) / GS,
-        }
-    }
-
-    pub fn to_point(&self) -> Point {
-        Point::new(self.x * GS, self.y * GS)
-    }
-}
-
-impl PartialEq for Grid {
-    fn eq(&self, rhs: &Self) -> bool {
-        (self.x == rhs.x) && (self.y == rhs.y)
-    }
-}
+pub type Grid = Point;
 
 /// Vector
-
-#[derive(Clone, Default, Copy)]
-pub struct Vector {
-    pub x: i32,
-    pub y: i32,
-}
-
-impl Vector {}
-
-#[test]
-fn pos_macro_test() {
-    assert_eq!(pos!(1, 2), crate::geometry::Point::new(1, 2))
-}
-
-#[test]
-fn grd_macro_test() {
-    assert_eq!(grd!(1, 2), crate::geometry::Grid::new(1, 2))
-}
+pub type Vector = Point;
