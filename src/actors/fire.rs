@@ -1,4 +1,6 @@
 use crate::actors::*;
+use crate::geometry::*;
+use crate::*;
 
 /// Fire
 
@@ -6,8 +8,7 @@ pub struct Fire {
     actor_id: ActorId,
     action: u32,
     ttl: i32,
-    pub x: i32,
-    pub y: i32,
+    pub pnt: Point,
 }
 
 impl Fire {
@@ -16,8 +17,7 @@ impl Fire {
             actor_id: ActorId::Fire,
             action: 0,
             ttl: 20,
-            x,
-            y,
+            pnt: pnt!(x, y),
         }
     }
 
@@ -26,7 +26,7 @@ impl Fire {
     }
 
     pub fn draw(&self) {
-        screen_put_sprite(self.x, self.y, self.actor_id, self.action)
+        screen_put_sprite(self.pnt.x, self.pnt.y, self.actor_id, self.action)
     }
 
     pub fn update(&mut self, _delta: i32) {

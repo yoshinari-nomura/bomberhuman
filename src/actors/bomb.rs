@@ -1,27 +1,31 @@
 use crate::actors::*;
 use crate::game_state::*;
+use crate::geometry::*;
+use crate::*;
 
 /// Bomb
 
 pub struct Bomb {
+    /// Id to distinguish each Actor
     actor_id: ActorId,
+    /// Current status or action of the bomb
     action: u32,
+    /// Time to Live
     ttl: i32,
-    pub player_id: u32,
-    pub x: i32,
-    pub y: i32,
+    /// Id to distinguish who put the bomb
+    pub owner_id: u32,
+    /// Current location of Bomb
+    pub pnt: Point,
 }
 
 impl Bomb {
-    pub fn new(player_id: u32, x: i32, y: i32) -> Self {
+    pub fn new(owner_id: u32, x: i32, y: i32) -> Self {
         Bomb {
             actor_id: ActorId::Bomb,
             action: 0,
             ttl: 300,
-            /// who put the bomb
-            player_id,
-            x,
-            y,
+            owner_id,
+            pnt: grd!(x, y),
         }
     }
 
@@ -30,11 +34,11 @@ impl Bomb {
     }
 
     pub fn draw(&self) {
-        screen_put_sprite(self.x, self.y, self.actor_id, self.action)
+        screen_put_sprite(self.pnt.x, self.pnt.y, self.actor_id, self.action)
     }
 
     pub fn update(&mut self, delta: i32, gs: &GameState) {
-        let fire_exists = gs.fires().iter().any(|f| f.x == self.x && f.y == self.y);
+        let fire_exists = gs.fires().iter().any(|f| f.pnt == self.pnt);
 
         self.ttl = if self.ttl > delta / 10 {
             self.ttl - delta / 10

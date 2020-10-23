@@ -89,35 +89,34 @@ impl Player {
         if key_state.button1 {
             let sum: i32 = bombs.iter().fold(
                 0,
-                |acc, b| if b.player_id == self.id { acc + 1 } else { acc },
+                |acc, b| if b.owner_id == self.id { acc + 1 } else { acc },
             );
             if sum < 5 {
-                let (x, y) = self.pnt.align_to_grid().to_tuple();
-                if !bombs.iter().any(|b| b.x == x && b.y == y) {
-                    bombs.push(Bomb::new(self.id, x, y));
+                let pnt = self.pnt.align_to_grid();
+                if !bombs.iter().any(|b| b.pnt == pnt) {
+                    bombs.push(Bomb::new(self.id, pnt.x, pnt.y));
                 }
             }
         }
         self.action = action;
 
         let (mut dx, mut dy) = self.align_vector_to_grid(dx, dy);
-        let (x, y) = (self.pnt.x + dx, self.pnt.y + dy);
+        let xy = pnt!(self.pnt.x + dx, self.pnt.y + dy);
+
         // Can not move if block exist
-        let block_exists = blocks
-            .iter()
-            .any(|b| (b.x - x).abs() < GS && (b.y - y).abs() < GS);
+        let block_exists = blocks.iter().any(|b| b.pnt.collides_with(xy));
         if block_exists {
             // XXX: Making (dx, dy) zero is bad idea. Should make (dx, dy) be shorten
             // to keep the safe distance, instead.
             dx = 0;
             dy = 0;
         }
+
         // Can not move if bomb exists
         // However, if the current position overlaps the bomb, it can.
-        let bomb_exists = bombs.iter().any(|b| {
-            !((b.x - self.pnt.x).abs() < GS && (b.y - self.pnt.y).abs() < GS) && // curretn position is not overlapped
-                ((b.x - x).abs() < GS && (b.y - y).abs() < GS) // boms exists at the same grid
-        });
+        let bomb_exists = bombs
+            .iter()
+            .any(|b| !self.pnt.collides_with(b.pnt) && xy.collides_with(b.pnt));
         if bomb_exists {
             // XXX: Making (dx, dy) zero is bad idea. Should make (dx, dy) be shorten
             // to keep the safe distance, instead.
@@ -127,10 +126,7 @@ impl Player {
         self.pnt.x += dx;
         self.pnt.y += dy;
 
-        let fire_exists = gs
-            .fires()
-            .iter()
-            .any(|f| (f.x - self.pnt.x).abs() < GS && (f.y - self.pnt.y).abs() < GS);
+        let fire_exists = gs.fires().iter().any(|f| self.pnt.collides_with(f.pnt));
         if fire_exists {
             self.action = 15;
             self.ttl = -60 * 8;

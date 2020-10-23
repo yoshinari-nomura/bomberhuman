@@ -160,7 +160,7 @@ impl GameState {
             if bombs[i].alive() {
                 i += 1;
             } else {
-                self.fire(bombs[i].x, bombs[i].y, 5);
+                self.fire(bombs[i].pnt, 5);
                 bombs.swap_remove(i);
             }
         }
@@ -179,25 +179,22 @@ impl GameState {
     /// Put fire at `(x, y)` with the `power`.
     ///
     /// Fire spreads into four-directions.
-    fn fire(&self, x: i32, y: i32, power: u8) {
+    fn fire(&self, pnt: Point, power: u8) {
         let mut fires = self.fires_mut();
-        let (sx, sy) = ((x + (GS / 2)) / GS * GS, (y + (GS / 2)) / GS * GS);
+        let start = pnt.align_to_grid();
         let mut p;
-        let mut x;
-        let mut y;
-        for (dx, dy) in &[(0, -GS), (0, GS), (-GS, 0), (GS, 0)] {
+        let mut pnt;
+        for &vec in &[pnt!(0, -GS), pnt!(0, GS), pnt!(-GS, 0), pnt!(GS, 0)] {
             p = power;
-            x = sx;
-            y = sy;
+            pnt = start;
             loop {
-                let block_exists = self.blocks().iter().any(|b| b.x == x && b.y == y);
+                let block_exists = self.blocks().iter().any(|b| b.pnt == pnt);
                 if block_exists || p == 0 {
                     break;
                 }
-                fires.push(Fire::new(x, y));
+                fires.push(Fire::new(pnt.x, pnt.y));
                 p -= 1;
-                x += dx;
-                y += dy;
+                pnt = pnt + vec;
             }
         }
     }

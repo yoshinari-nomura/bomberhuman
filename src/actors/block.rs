@@ -1,12 +1,13 @@
 use crate::actors::*;
+use crate::geometry::*;
+use crate::*;
 
 /// Block
 
 pub struct Block {
     actor_id: ActorId,
     action: u32,
-    pub x: i32,
-    pub y: i32,
+    pub pnt: Point,
 }
 
 impl Block {
@@ -14,8 +15,7 @@ impl Block {
         Block {
             actor_id: ActorId::Block,
             action: 0,
-            x,
-            y,
+            pnt: grd!(x, y),
         }
     }
 
@@ -24,7 +24,7 @@ impl Block {
     }
 
     pub fn draw(&self) {
-        screen_put_sprite(self.x, self.y, self.actor_id, self.action)
+        screen_put_sprite(self.pnt.x, self.pnt.y, self.actor_id, self.action)
     }
 
     pub fn update(&mut self, _delta: i32) {}
