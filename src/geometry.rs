@@ -32,7 +32,7 @@ pub const GS: i32 = 60;
 /// # }
 /// ```
 ///
-#[derive(Clone, Default, Copy, Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Point {
     pub x: i32,
     pub y: i32,
@@ -132,13 +132,6 @@ impl Point {
             // It's moving away from the center of grid.
             v
         }
-    }
-}
-
-/// Implements '==' operator for Point == Point
-impl PartialEq for Point {
-    fn eq(&self, rhs: &Self) -> bool {
-        (self.x == rhs.x) && (self.y == rhs.y)
     }
 }
 
