@@ -4,6 +4,7 @@ use crate::actors::*;
 use crate::game_state::*;
 use crate::geometry::*;
 use crate::keyboard::*;
+use crate::*;
 
 /// Player
 
@@ -12,8 +13,8 @@ pub struct Player {
     pub id: u32,
     action: u32,
     ttl: i32,
-    x: i32,
-    y: i32,
+    /// Current location of Player
+    pnt: Point,
 }
 
 impl Player {
@@ -30,13 +31,12 @@ impl Player {
             actor_id,
             action: 0,
             ttl: 1,
-            x,
-            y,
+            pnt: grd!(x, y),
         }
     }
 
     pub fn draw(&self) {
-        screen_put_sprite(self.x, self.y, self.actor_id, self.action)
+        screen_put_sprite(self.pnt.x, self.pnt.y, self.actor_id, self.action)
     }
 
     pub fn alive(&self) -> bool {
@@ -78,7 +78,7 @@ impl Player {
                 |acc, b| if b.player_id == self.id { acc + 1 } else { acc },
             );
             if sum < 5 {
-                let (x, y) = ((self.x + (GS / 2)) / GS * GS, (self.y + (GS / 2)) / GS * GS);
+                let (x, y) = self.pnt.align_to_grid().to_tuple();
                 if !bombs.iter().any(|b| b.x == x && b.y == y) {
                     bombs.push(Bomb::new(self.id, x, y));
                 }
@@ -87,7 +87,7 @@ impl Player {
         self.action = action;
 
         let (mut dx, mut dy) = self.align_vector_to_grid(dx, dy);
-        let (x, y) = (self.x + dx, self.y + dy);
+        let (x, y) = (self.pnt.x + dx, self.pnt.y + dy);
         // Can not move if block exist
         let block_exists = blocks
             .iter()
@@ -101,7 +101,7 @@ impl Player {
         // Can not move if bomb exists
         // However, if the current position overlaps the bomb, it can.
         let bomb_exists = bombs.iter().any(|b| {
-            !((b.x - self.x).abs() < GS && (b.y - self.y).abs() < GS) && // curretn position is not overlapped
+            !((b.x - self.pnt.x).abs() < GS && (b.y - self.pnt.y).abs() < GS) && // curretn position is not overlapped
                 ((b.x - x).abs() < GS && (b.y - y).abs() < GS) // boms exists at the same grid
         });
         if bomb_exists {
@@ -110,13 +110,13 @@ impl Player {
             dx = 0;
             dy = 0;
         }
-        self.x += dx;
-        self.y += dy;
+        self.pnt.x += dx;
+        self.pnt.y += dy;
 
         let fire_exists = gs
             .fires()
             .iter()
-            .any(|f| (f.x - self.x).abs() < GS && (f.y - self.y).abs() < GS);
+            .any(|f| (f.x - self.pnt.x).abs() < GS && (f.y - self.pnt.y).abs() < GS);
         if fire_exists {
             self.action = 15;
             self.ttl = -60 * 8;
@@ -134,8 +134,11 @@ impl Player {
     /// 4. else, use (dx, dy)
     ///
     fn align_vector_to_grid(&self, dx: i32, dy: i32) -> (i32, i32) {
-        let (cx, cy) = ((self.x + (GS / 2)) / GS * GS, (self.y + (GS / 2)) / GS * GS);
-        let (mut gx, mut gy) = (cx - self.x, cy - self.y);
+        let (cx, cy) = (
+            (self.pnt.x + (GS / 2)) / GS * GS,
+            (self.pnt.y + (GS / 2)) / GS * GS,
+        );
+        let (mut gx, mut gy) = (cx - self.pnt.x, cy - self.pnt.y);
         let ip = gx * dx + gy * dy;
         let speed = if dx.abs() > dy.abs() {
             dx.abs()
