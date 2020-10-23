@@ -194,7 +194,7 @@ impl GameState {
                 }
                 fires.push(Fire::new(pnt.x, pnt.y));
                 p -= 1;
-                pnt = pnt + vec;
+                pnt += vec;
             }
         }
     }

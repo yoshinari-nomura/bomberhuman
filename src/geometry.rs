@@ -1,6 +1,6 @@
 //! Geometry
 
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, AddAssign, Mul, Sub};
 
 /// Grid size: Width and height of each Grid
 ///
@@ -151,6 +151,16 @@ impl Add for Point {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
         }
+    }
+}
+
+/// Implements the '+=' operator for Point += Point
+impl AddAssign for Point {
+    fn add_assign(&mut self, rhs: Point) {
+        *self = Point {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        };
     }
 }
 
