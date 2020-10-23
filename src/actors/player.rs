@@ -9,15 +9,23 @@ use crate::*;
 /// Player
 
 pub struct Player {
+    /// Id to distinguish each Actor
     actor_id: ActorId,
+    /// Id to distinguish each Player
     pub id: u32,
+    /// Current status or action of the player
     action: u32,
+    /// Time to Live
     ttl: i32,
     /// Current location of Player
     pnt: Point,
 }
 
 impl Player {
+    /// Constructor of Player
+    ///
+    /// `x`, `y` are the initial positions of the player.
+    /// `id` is an id number to distinguish each player.
     pub fn new(id: u32, x: i32, y: i32) -> Self {
         let actor_id = match id {
             0 => ActorId::Player1,
@@ -35,14 +43,20 @@ impl Player {
         }
     }
 
+    /// Draw player on screen
     pub fn draw(&self) {
         screen_put_sprite(self.pnt.x, self.pnt.y, self.actor_id, self.action)
     }
 
+    /// Predicate to check the player is alive
     pub fn alive(&self) -> bool {
         self.ttl > 0
     }
 
+    /// Update function for players
+    ///
+    /// This function is supposed to be called for each frame of the game.
+    /// According to the `key_state`, it acts on the GameState (`gs`).
     pub fn update(&mut self, delta: i32, gs: &GameState, key_state: &KeyState) {
         if !self.alive() {
             self.ttl += 1;

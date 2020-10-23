@@ -66,8 +66,9 @@ impl GameState {
         }
     }
 
-    // delta = ms (1frame = 16.6ms)
-    // average delta = 17
+    /// Update status of actors in the game.
+    ///
+    /// `delta` is in ms. In general, one frame takes 16.6 ms.
     pub fn update(&mut self, delta: i32) {
         let gs = &self;
         for p in &mut *self.players_mut() {
@@ -85,6 +86,7 @@ impl GameState {
         self.cleanup()
     }
 
+    /// Draw all actors in the game.
     pub fn draw(&self) {
         screen_clear_rect(0, 0, self.width, self.height);
         for p in &*self.players() {
@@ -101,6 +103,7 @@ impl GameState {
         }
     }
 
+    /// Callback function on change the key-input status
     pub fn toggle_key(&mut self, bind: u32, key: Key, state: bool) {
         let ks = &mut self.key_states[bind as usize];
         match key {
@@ -146,6 +149,10 @@ impl GameState {
         self.fires.borrow_mut()
     }
 
+    /// Clean-up function called after update of actors
+    ///
+    /// Remove expired fire and bombs.
+    /// If the bombs are exploding, generate fires.
     fn cleanup(&mut self) {
         let mut bombs = self.bombs_mut();
         let mut i = 0;
@@ -169,6 +176,9 @@ impl GameState {
         }
     }
 
+    /// Put fire at `(x, y)` with the `power`.
+    ///
+    /// Fire spreads into four-directions.
     fn fire(&self, x: i32, y: i32, power: u8) {
         let mut fires = self.fires_mut();
         let (sx, sy) = ((x + (GS / 2)) / GS * GS, (y + (GS / 2)) / GS * GS);
