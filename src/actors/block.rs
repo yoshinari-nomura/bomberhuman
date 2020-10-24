@@ -18,15 +18,15 @@ impl Block {
     }
 
     pub fn hard(x: i32, y: i32) -> Self {
-        Block::build(x, y, 15, 0)
+        Block::build(x, y, 30, 0)
     }
 
     pub fn soft(x: i32, y: i32) -> Self {
-        Block::build(x, y, 14, 1)
+        Block::build(x, y, 28, 1)
     }
 
     pub fn is_soft(&self) -> bool {
-        self.ttl < 15
+        self.ttl < 30
     }
 
     pub fn alive(&self) -> bool {
@@ -39,11 +39,11 @@ impl Block {
 
     pub fn update(&mut self, _delta: i32, gs: &GameState) {
         // hardblock →nothing to do.
-        if self.ttl > 14 {
+        if !self.is_soft() {
             return;
         }
         // softblock → check if fired
-        if self.ttl == 14 {
+        if self.ttl == 28 {
             let fire_exists = gs.fires().iter().any(|f| f.pnt == self.pnt);
             if fire_exists {
                 self.ttl -= 1;
@@ -52,7 +52,7 @@ impl Block {
             // burning the block
             self.ttl -= 1;
         }
-        self.action = (15 - self.ttl) as u32;
+        self.action = (15 - self.ttl / 2) as u32;
     }
 
     fn build(x: i32, y: i32, ttl: i32, action: u32) -> Self {
