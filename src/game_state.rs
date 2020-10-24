@@ -9,6 +9,7 @@ use actors::bomb::Bomb;
 use actors::fire::Fire;
 use actors::player::Player;
 use keyboard::*;
+use stage::*;
 
 /// Game State
 
@@ -26,23 +27,7 @@ pub struct GameState {
 #[wasm_bindgen]
 impl GameState {
     pub fn new(width: u32, height: u32) -> Self {
-        let mut blocks = vec![];
-
-        // Put perimeter wall
-        for y in 0..13 {
-            for x in 0..15 {
-                if x == 0 || x == 14 || y == 0 || y == 12 {
-                    let block = Block::new(x * GS, y * GS);
-                    blocks.push(block);
-                }
-            }
-        }
-        for x in &[2, 4, 6, 8, 10, 12] {
-            for y in &[2, 4, 6, 8, 10] {
-                let block = Block::new(x * GS, y * GS);
-                blocks.push(block);
-            }
-        }
+        let stage = Stage::new();
 
         // Create players
         let mut players = vec![];
@@ -61,7 +46,7 @@ impl GameState {
             ],
             players: RefCell::new(players),
             bombs: RefCell::new(vec![]),
-            blocks: RefCell::new(blocks),
+            blocks: RefCell::new(stage.blocks),
             fires: RefCell::new(vec![]),
         }
     }
@@ -78,7 +63,7 @@ impl GameState {
             b.update(delta, gs)
         }
         for b in &mut *self.blocks_mut() {
-            b.update(delta);
+            b.update(delta, gs);
         }
         for f in &mut *self.fires_mut() {
             f.update(delta);
@@ -174,6 +159,16 @@ impl GameState {
                 fires.swap_remove(i);
             }
         }
+
+        let mut blocks = self.blocks_mut();
+        let mut i = 0;
+        while i < blocks.len() {
+            if blocks[i].alive() {
+                i += 1;
+            } else {
+                blocks.swap_remove(i);
+            }
+        }
     }
 
     /// Put fire at `(x, y)` with the `power`.
@@ -188,11 +183,17 @@ impl GameState {
             p = power;
             pnt = start;
             loop {
-                let block_exists = self.blocks().iter().any(|b| b.pnt == pnt);
-                if block_exists || p == 0 {
+                if p == 0 {
                     break;
                 }
-                fires.push(Fire::new(pnt.x, pnt.y));
+                if let Some(block) = self.blocks().iter().find(|b| b.pnt == pnt) {
+                    if block.is_soft() {
+                        fires.push(Fire::new(pnt.x, pnt.y));
+                    }
+                    break;
+                } else {
+                    fires.push(Fire::new(pnt.x, pnt.y));
+                }
                 p -= 1;
                 pnt += vec;
             }

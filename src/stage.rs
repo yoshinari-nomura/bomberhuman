@@ -1,88 +1,70 @@
-use crate::actors::ActorId;
+use crate::actors::block::*;
 use crate::geometry::*;
-use crate::*;
 
 /// Stage
 
 pub struct Stage {
-    map: Vec<u8>,
-    width: usize,
-    height: usize,
+    pub blocks: Vec<Block>,
+    pub width: usize,
+    pub height: usize,
 }
 
-// 15x13
-// ■■■■■■■■■■■■■■■
-// ■□□□□□□□□□□□□□■
-// ■□■□■□■□■□■□■□■
-// ■□□□□□□□□□□□□□■
-// ■□■□■□■□■□■□■□■
-// ■□□□□□□□□□□□□□■
-// ■□■□■□■□■□■□■□■
-// ■□□□□□□□□□□□□□■
-// ■□■□■□■□■□■□■□■
-// ■□□□□□□□□□□□□□■
-// ■□■□■□■□■□■□■□■
-// ■□□□□□□□□□□□□□■
-// ■■■■■■■■■■■■■■■
+/// Base information to creat stage
+///
+/// ```text
+///  0 1 2 3 4 5 6 7 8 9 A B C D E
+/// 0■■■■■■■■■■■■■■■
+/// 1■××□□□□□□□□□××■
+/// 2■×■□■□■□■□■□■×■
+/// 3■□□□□□□□□□□□□□■
+/// 4■□■□■□■□■□■□■□■
+/// 5■□□□□□□□□□□□□□■
+/// 6■□■□■□■□■□■□■□■
+/// 7■□□□□□□□□□□□□□■
+/// 8■□■□■□■□■□■□■□■
+/// 9■□□□□□□□□□□□□□■
+/// A■×■□■□■□■□■□■×■
+/// B■××□□□□□□□□□××■
+/// C■■■■■■■■■■■■■■■
+/// ```
+const BLOCK_MAP: [u8; 195] = [
+    // 1  2  3  4  5  6  7  8  9  A  B  C  D  E
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0
+    1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, // 1
+    1, 2, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 1, // 2
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, // 3
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, // 4
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, // 5
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, // 6
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, // 7
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, // 8
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, // 9
+    1, 2, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 1, // A
+    1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, // B
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // C
+];
+
 impl Stage {
     pub fn new() -> Stage {
-        let mut map: Vec<u8> = vec![];
-        let blocks: Vec<u16> = vec![
-            // LSB is not used
-            0b1111111111111110,
-            0b1000000000000010,
-            0b1010101010101010,
-            0b1000000000000010,
-            0b1010101010101010,
-            0b1000000000000010,
-            0b1010101010101010,
-            0b1000000000000010,
-            0b1010101010101010,
-            0b1000000000000010,
-            0b1010101010101010,
-            0b1000000000000010,
-            0b1111111111111110,
-        ];
-        for y in 0..13 {
-            for x in 0..15 {
-                if blocks[y] & (0b1000_0000_0000_0000 >> x) != 0 {
-                    map.push(1 << (ActorId::Block as u8));
-                } else {
-                    map.push(0);
+        let mut blocks: Vec<Block> = vec![];
+        for (i, info) in BLOCK_MAP.iter().enumerate() {
+            let (x, y) = (((i % 15) as i32) * GS, ((i / 15) as i32) * GS);
+            match info {
+                1 => blocks.push(Block::hard(x, y)),
+                2 => (),
+                _ => {
+                    if rand::random() {
+                        blocks.push(Block::soft(x, y));
+                    }
                 }
             }
         }
+        println!("{}", BLOCK_MAP[0]);
+
         Stage {
-            map,
             width: 15,
             height: 13,
-        }
-    }
-
-    pub fn put(&mut self, gp: Grid, c: ActorId) {
-        if self.height == 0 {
-            return;
-        }
-        let offset = gp.y * self.width as i32 + gp.x;
-        self.map[offset as usize] |= 1 << c as u8
-    }
-
-    pub fn get(&self, gp: Grid, c: ActorId) -> bool {
-        let offset = gp.y * self.width as i32 + gp.x;
-        self.map[offset as usize] & (1 << c as u8) != 0
-    }
-    pub fn dump(&self) {
-        for y in 0..13 {
-            let mut string = String::new();
-            for x in 0..15 {
-                let c = if self.get(Grid::new(x, y), ActorId::Block) {
-                    '■'
-                } else {
-                    '□'
-                };
-                string.push(c);
-            }
-            console_log!("{}", string);
+            blocks,
         }
     }
 }
