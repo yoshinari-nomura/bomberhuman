@@ -8,6 +8,7 @@ use actors::block::Block;
 use actors::bomb::Bomb;
 use actors::fire::Fire;
 use actors::player::Player;
+use actors::power::Power;
 use keyboard::*;
 use stage::*;
 
@@ -22,6 +23,7 @@ pub struct GameState {
     bombs: RefCell<Vec<Bomb>>,
     fires: RefCell<Vec<Fire>>,
     players: RefCell<Vec<Player>>,
+    powers: RefCell<Vec<Power>>,
 }
 
 #[wasm_bindgen]
@@ -48,6 +50,7 @@ impl GameState {
             bombs: RefCell::new(vec![]),
             blocks: RefCell::new(stage.blocks),
             fires: RefCell::new(vec![]),
+            powers: RefCell::new(stage.powers),
         }
     }
 
@@ -68,12 +71,18 @@ impl GameState {
         for f in &mut *self.fires_mut() {
             f.update(delta);
         }
+        for p in &mut *self.powers_mut() {
+            p.update(delta, gs);
+        }
         self.cleanup()
     }
 
     /// Draw all actors in the game.
     pub fn draw(&self) {
         screen_clear_rect(0, 0, self.width, self.height);
+        for p in &*self.powers() {
+            p.draw();
+        }
         for p in &*self.players() {
             p.draw();
         }
@@ -134,6 +143,14 @@ impl GameState {
         self.fires.borrow_mut()
     }
 
+    pub fn powers(&self) -> Ref<Vec<Power>> {
+        self.powers.borrow()
+    }
+
+    pub fn powers_mut(&self) -> RefMut<Vec<Power>> {
+        self.powers.borrow_mut()
+    }
+
     /// Clean-up function called after update of actors
     ///
     /// Remove expired fire and bombs.
@@ -145,7 +162,7 @@ impl GameState {
             if bombs[i].alive() {
                 i += 1;
             } else {
-                self.fire(bombs[i].pnt, 5);
+                self.fire(bombs[i].pnt, bombs[i].power);
                 bombs.swap_remove(i);
             }
         }
@@ -167,6 +184,16 @@ impl GameState {
                 i += 1;
             } else {
                 blocks.swap_remove(i);
+            }
+        }
+
+        let mut powers = self.powers_mut();
+        let mut i = 0;
+        while i < powers.len() {
+            if powers[i].alive() {
+                i += 1;
+            } else {
+                powers.swap_remove(i);
             }
         }
     }

@@ -16,16 +16,19 @@ pub struct Bomb {
     pub owner_id: u32,
     /// Current location of Bomb
     pub pnt: Point,
+    /// Power of Bomb
+    pub power: u8,
 }
 
 impl Bomb {
-    pub fn new(owner_id: u32, x: i32, y: i32) -> Self {
+    pub fn new(owner_id: u32, x: i32, y: i32, power: u8) -> Self {
         Bomb {
             actor_id: ActorId::Bomb,
             action: 0,
             ttl: 300,
             owner_id,
             pnt: grd!(x, y),
+            power,
         }
     }
 

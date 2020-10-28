@@ -1,5 +1,6 @@
 use crate::actors::bomb::*;
 use crate::actors::*;
+use std::cmp::min;
 
 use crate::game_state::*;
 use crate::geometry::*;
@@ -18,7 +19,13 @@ pub struct Player {
     /// Time to Live
     ttl: i32,
     /// Current location of Player
-    pnt: Point,
+    pub pnt: Point,
+    /// Current bomb power of Player
+    bomb_power: u8,
+    /// Current max number of bombs
+    max_num_bombs: u8,
+    /// Current speed of player
+    speed: u8,
 }
 
 impl Player {
@@ -40,6 +47,9 @@ impl Player {
             action: 0,
             ttl: 1,
             pnt: grd!(x, y),
+            bomb_power: 2,
+            max_num_bombs: 1,
+            speed: 1,
         }
     }
 
@@ -62,7 +72,7 @@ impl Player {
             self.ttl += 1;
             return;
         }
-        let speed = delta / 3; // 1frame = 16ms, speed should be 5 or so.
+        let speed = delta / 6 * self.speed as i32; // 1frame = 16ms, speed should be 5 or so.
         let mut action = 0;
         let mut dx = 0;
         let mut dy = 0;
@@ -91,10 +101,10 @@ impl Player {
                 0,
                 |acc, b| if b.owner_id == self.id { acc + 1 } else { acc },
             );
-            if sum < 5 {
+            if sum < self.max_num_bombs as i32 {
                 let pnt = self.pnt.align_to_grid();
                 if !bombs.iter().any(|b| b.pnt == pnt) {
-                    bombs.push(Bomb::new(self.id, pnt.x, pnt.y));
+                    bombs.push(Bomb::new(self.id, pnt.x, pnt.y, self.bomb_power));
                 }
             }
         }
@@ -176,6 +186,16 @@ impl Player {
         } else {
             // It's moving away from the center of grid.
             (dx, dy)
+        }
+    }
+
+    /// bomb, bombpower, speed
+    pub fn push_item(&mut self, item_type: ActorId) {
+        match item_type {
+            ActorId::BombUp => self.max_num_bombs = min(self.max_num_bombs + 1, 8),
+            ActorId::BombPowerUp => self.bomb_power = min(self.bomb_power + 1, 8),
+            ActorId::SpeedUp => self.speed = min(self.speed + 1, 30),
+            _ => (),
         }
     }
 }

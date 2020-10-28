@@ -1,10 +1,12 @@
 use crate::actors::block::*;
+use crate::actors::power::*;
 use crate::geometry::*;
 
 /// Stage
 
 pub struct Stage {
     pub blocks: Vec<Block>,
+    pub powers: Vec<Power>,
     pub width: usize,
     pub height: usize,
 }
@@ -47,6 +49,7 @@ const BLOCK_MAP: [u8; 195] = [
 impl Stage {
     pub fn new() -> Stage {
         let mut blocks: Vec<Block> = vec![];
+        let mut powers: Vec<Power> = vec![];
         for (i, info) in BLOCK_MAP.iter().enumerate() {
             let (x, y) = (((i % 15) as i32) * GS, ((i / 15) as i32) * GS);
             match info {
@@ -55,6 +58,9 @@ impl Stage {
                 _ => {
                     if rand::random() {
                         blocks.push(Block::soft(x, y));
+                        if rand::random() {
+                            powers.push(Power::random_item(x, y));
+                        }
                     }
                 }
             }
@@ -65,6 +71,7 @@ impl Stage {
             width: 15,
             height: 13,
             blocks,
+            powers,
         }
     }
 }

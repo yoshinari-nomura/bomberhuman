@@ -2,6 +2,7 @@ pub mod block;
 pub mod bomb;
 pub mod fire;
 pub mod player;
+pub mod power;
 
 pub use crate::screen::*;
 use wasm_bindgen::prelude::*;
@@ -18,4 +19,7 @@ pub enum ActorId {
     Bomb = 4,
     Block = 5,
     Fire = 6,
+    BombUp = 7,
+    BombPowerUp = 8,
+    SpeedUp = 9,
 }
