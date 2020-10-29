@@ -110,82 +110,27 @@ impl Player {
         }
         self.action = action;
 
-        let (mut dx, mut dy) = self.align_vector_to_grid(dx, dy);
-        let xy = pnt!(self.pnt.x + dx, self.pnt.y + dy);
+        let dxy = self.pnt.adjust_vector_to_grid(pnt!(dx, dy));
+        let new_xy = self.pnt + dxy;
 
-        // Can not move if block exist
-        let block_exists = blocks.iter().any(|b| b.pnt.collides_with(xy));
-        if block_exists {
-            // XXX: Making (dx, dy) zero is bad idea. Should make (dx, dy) be shorten
-            // to keep the safe distance, instead.
-            dx = 0;
-            dy = 0;
-        }
+        let block_exists = blocks.iter().any(|b| b.pnt.collides_with(new_xy));
 
-        // Can not move if bomb exists
-        // However, if the current position overlaps the bomb, it can.
         let bomb_exists = bombs
             .iter()
-            .any(|b| !self.pnt.collides_with(b.pnt) && xy.collides_with(b.pnt));
-        if bomb_exists {
+            // bomb exists at new_xy, but does not exist at current position
+            .any(|b| !self.pnt.collides_with(b.pnt) && new_xy.collides_with(b.pnt));
+
+        if !block_exists && !bomb_exists {
+            self.pnt += dxy;
+        } else {
             // XXX: Making (dx, dy) zero is bad idea. Should make (dx, dy) be shorten
             // to keep the safe distance, instead.
-            dx = 0;
-            dy = 0;
         }
-        self.pnt.x += dx;
-        self.pnt.y += dy;
 
         let fire_exists = gs.fires().iter().any(|f| self.pnt.collides_with(f.pnt));
         if fire_exists {
             self.action = 15;
             self.ttl = -60 * 8;
-        }
-    }
-
-    /// Correct the direction vector to go through the nearest grid center
-    ///
-    /// # Algorism
-    ///
-    /// 1. Let (dx, dy) be the original vector and (gx, gy) be the
-    ///    vector from its current position (x, y) to the nearest grid.
-    /// 2. Let θ be the angle formed by (dx, dy) and (gx, gy)
-    /// 3. if θ is within ±90 degrees (inner product is 0 or greater) → (gx, gy).
-    /// 4. else, use (dx, dy)
-    ///
-    fn align_vector_to_grid(&self, dx: i32, dy: i32) -> (i32, i32) {
-        let (cx, cy) = (
-            (self.pnt.x + (GS / 2)) / GS * GS,
-            (self.pnt.y + (GS / 2)) / GS * GS,
-        );
-        let (mut gx, mut gy) = (cx - self.pnt.x, cy - self.pnt.y);
-        let ip = gx * dx + gy * dy;
-        let speed = if dx.abs() > dy.abs() {
-            dx.abs()
-        } else {
-            dy.abs()
-        };
-
-        // It's not moving or already on the grid
-        if (dx == 0 && dy == 0) || (gx == 0 && gy == 0) {
-            return (dx, dy);
-        }
-
-        if ip >= 0 {
-            // Within 90 degree angle to the center of grid,
-            // make it go to the center of the grid.
-
-            // Clip the size of the vector to less than the original speed.
-            if gx.abs() > speed {
-                gx = gx.signum() * speed;
-            }
-            if gy.abs() > speed {
-                gy = gy.signum() * speed;
-            }
-            (gx, gy)
-        } else {
-            // It's moving away from the center of grid.
-            (dx, dy)
         }
     }
 

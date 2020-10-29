@@ -31,12 +31,6 @@ impl GameState {
     pub fn new(width: u32, height: u32) -> Self {
         let stage = Stage::new();
 
-        // Create players
-        let mut players = vec![];
-        for (i, grid) in [(13, 11), (1, 1), (13, 1), (1, 11)].iter().enumerate() {
-            players.push(Player::new(i as u32, grid.0 * GS, grid.1 * GS));
-        }
-
         GameState {
             width,
             height,
@@ -46,7 +40,7 @@ impl GameState {
                 KeyState::new(),
                 KeyState::new(),
             ],
-            players: RefCell::new(players),
+            players: RefCell::new(stage.players),
             bombs: RefCell::new(vec![]),
             blocks: RefCell::new(stage.blocks),
             fires: RefCell::new(vec![]),

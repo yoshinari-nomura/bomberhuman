@@ -1,5 +1,6 @@
 //! Geometry
 
+use std::cmp::max;
 use std::ops::{Add, AddAssign, Mul, Sub};
 
 /// Grid size: Width and height of each Grid
@@ -76,6 +77,28 @@ impl Point {
         self.x == 0 && self.y == 0
     }
 
+    /// Length of Vector
+    pub fn length(&self) -> i32 {
+        max(self.x.abs(), self.y.abs())
+    }
+
+    /// Clip the norm of Vector into `length`
+    pub fn clip_length(&self, length: i32) -> Vector {
+        let (x, y) = self.to_tuple();
+        pnt!(
+            if x.abs() > length {
+                x.signum() * length
+            } else {
+                x
+            },
+            if y.abs() > length {
+                y.signum() * length
+            } else {
+                y
+            }
+        )
+    }
+
     /// Convert the point into tuple (x, y)
     pub fn to_tuple(&self) -> (i32, i32) {
         (self.x, self.y)
@@ -91,45 +114,32 @@ impl Point {
         (self.x - pnt.x).abs() < GS && (self.y - pnt.y).abs() < GS
     }
 
-    /// Correct the direction vector to go through the nearest grid center
+    /// Adjust the vector to go through the nearest grid
     ///
     /// # Algorism
     ///
-    /// 1. Let (dx, dy) be the original vector and (gx, gy) be the
+    /// 1. Let `v = (dx, dy)` be the original vector and (gx, gy) be the
     ///    vector from its current position (x, y) to the nearest grid.
     /// 2. Let θ be the angle formed by (dx, dy) and (gx, gy)
     /// 3. if θ is within ±90 degrees (inner product is 0 or greater) → (gx, gy).
     /// 4. else, use (dx, dy)
     ///
-    pub fn align_vector_to_grid(&self, v: Vector) -> Point {
-        let c = self.align_to_grid();
-        let mut g = c - *self;
-        let ip = g * v;
-        let speed = if v.x.abs() > v.y.abs() {
-            v.x.abs()
-        } else {
-            v.y.abs()
-        };
+    pub fn adjust_vector_to_grid(&self, v: Vector) -> Vector {
+        let gv = self.vector_toward_grid();
+        let speed = v.length();
 
         // It's not moving or already on the grid
-        if v.is_zero() || g.is_zero() {
+        if v.is_zero() || gv.is_zero() {
             return v;
         }
 
-        if ip >= 0 {
+        if gv * v >= 0 {
             // Within 90 degree angle to the center of grid,
             // make it go to the center of the grid.
-
             // Clip the size of the vector to less than the original speed.
-            if g.x.abs() > speed {
-                g.x = g.x.signum() * speed;
-            }
-            if g.y.abs() > speed {
-                g.y = g.y.signum() * speed;
-            }
-            g
+            gv.clip_length(speed)
         } else {
-            // It's moving away from the center of grid.
+            // It's moving away from the grid.
             v
         }
     }

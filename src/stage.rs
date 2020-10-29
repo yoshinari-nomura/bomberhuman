@@ -1,4 +1,5 @@
 use crate::actors::block::*;
+use crate::actors::player::*;
 use crate::actors::power::*;
 use crate::geometry::*;
 
@@ -6,6 +7,7 @@ use crate::geometry::*;
 
 pub struct Stage {
     pub blocks: Vec<Block>,
+    pub players: Vec<Player>,
     pub powers: Vec<Power>,
     pub width: usize,
     pub height: usize,
@@ -32,7 +34,7 @@ pub struct Stage {
 const BLOCK_MAP: [u8; 195] = [
     // 1  2  3  4  5  6  7  8  9  A  B  C  D  E
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0
-    1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, // 1
+    1, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 1, // 1
     1, 2, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 1, // 2
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, // 3
     1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, // 4
@@ -42,19 +44,21 @@ const BLOCK_MAP: [u8; 195] = [
     1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, // 8
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, // 9
     1, 2, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 1, // A
-    1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, // B
+    1, 6, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 1, // B
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // C
 ];
 
 impl Stage {
     pub fn new() -> Stage {
         let mut blocks: Vec<Block> = vec![];
+        let mut players: Vec<Player> = vec![];
         let mut powers: Vec<Power> = vec![];
         for (i, info) in BLOCK_MAP.iter().enumerate() {
             let (x, y) = (((i % 15) as i32) * GS, ((i / 15) as i32) * GS);
             match info {
                 1 => blocks.push(Block::hard(x, y)),
                 2 => (),
+                id @ 3..=6 => players.push(Player::new(*id as u32 - 3, x, y)),
                 _ => {
                     if rand::random() {
                         blocks.push(Block::soft(x, y));
@@ -65,12 +69,12 @@ impl Stage {
                 }
             }
         }
-        println!("{}", BLOCK_MAP[0]);
 
         Stage {
             width: 15,
             height: 13,
             blocks,
+            players,
             powers,
         }
     }
