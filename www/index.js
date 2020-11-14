@@ -45,6 +45,36 @@ function process_key(key, state) {
 }
 
 ////////////////////////////////////////////////////////////////
+// Gamepads handling
+////////////////////////////////////////////////////////////////
+
+// Needs "gamepadconnected" handler even if empty.
+function init_gamepads(gp) {
+  if (debug) {
+    console.log("Gamepad connected at index:%d buttons:%d axes:%d [%s]",
+                gp.index, gp.buttons.length, gp.axes.length, gp.id);
+  }
+}
+
+function scan_gamepads() {
+  // Chrome should refresh gamepads everytime you read.
+  var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+
+  for (var i = 0; i < gamepads.length; i++) {
+    var pad = gamepads[i];
+
+    if (pad) {
+      // Send state to WASM
+      gs.toggle_key(i, Key.Left,    pad.axes[0] < 0);
+      gs.toggle_key(i, Key.Right,   pad.axes[0] > 0);
+      gs.toggle_key(i, Key.Up,      pad.axes[1] < 0);
+      gs.toggle_key(i, Key.Down,    pad.axes[1] > 0);
+      gs.toggle_key(i, Key.Button1, pad.buttons[0].pressed);
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////
 // Main loop
 ////////////////////////////////////////////////////////////////
 
@@ -61,6 +91,8 @@ let game_loop = (timestamp) => {
   }
 
   let delta = (timestamp - prev_timestamp);
+
+  scan_gamepads();
   gs.update(delta);  // WASM
   gs.draw();  // WASM
 
@@ -76,6 +108,7 @@ function start_game() {
   gs = GameState.new(900, 780); // WASM
   document.addEventListener('keydown', e => process_key(e.key, true));
   document.addEventListener('keyup',   e => process_key(e.key, false));
+  document.addEventListener("gamepadconnected", e => init_gamepads(e.gamepad));
   game_loop();
 }
 
