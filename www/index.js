@@ -1,4 +1,4 @@
-const debug = false;
+const debug = true;
 
 import { GameState, Key } from "bomberhuman";
 
@@ -65,10 +65,10 @@ function scan_gamepads() {
 
     if (pad) {
       // Send state to WASM
-      gs.toggle_key(i, Key.Left,    pad.axes[0] < 0);
-      gs.toggle_key(i, Key.Right,   pad.axes[0] > 0);
-      gs.toggle_key(i, Key.Up,      pad.axes[1] < 0);
-      gs.toggle_key(i, Key.Down,    pad.axes[1] > 0);
+      gs.toggle_key(i, Key.Left,    pad.axes[0] < -0.5);
+      gs.toggle_key(i, Key.Right,   pad.axes[0] >  0.5);
+      gs.toggle_key(i, Key.Up,      pad.axes[1] < -0.5);
+      gs.toggle_key(i, Key.Down,    pad.axes[1] >  0.5);
       gs.toggle_key(i, Key.Button1, pad.buttons[0].pressed);
     }
   }
