@@ -3,6 +3,14 @@
 use std::cmp::max;
 use std::ops::{Add, AddAssign, Mul, Sub};
 
+/// Cardinal Direction  N/W/S/E
+pub enum Direction {
+    N,
+    W,
+    S,
+    E,
+}
+
 /// Grid size: Width and height of each Grid
 ///
 /// In this game, almost all game characters (actors) are to be
@@ -80,6 +88,21 @@ impl Point {
     /// Length of Vector
     pub fn length(&self) -> i32 {
         max(self.x.abs(), self.y.abs())
+    }
+
+    /// Abstract direction N/W/S/E
+    pub fn cardinal_direction(&self) -> Option<Direction> {
+        if self.x < 0 {
+            Some(Direction::W)
+        } else if self.x > 0 {
+            Some(Direction::E)
+        } else if self.y < 0 {
+            Some(Direction::N)
+        } else if self.y > 0 {
+            Some(Direction::S)
+        } else {
+            None
+        }
     }
 
     /// Clip the norm of Vector into `length`
