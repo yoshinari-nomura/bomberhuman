@@ -30,6 +30,8 @@ impl Fire {
     }
 
     pub fn update(&mut self, _delta: i32) {
+        // XXX: action is 0-5 for the sake of sprites.png should FIX it.
+        self.action = (20 - self.ttl as u32) * 15 / 20;
         self.ttl -= 1;
     }
 }

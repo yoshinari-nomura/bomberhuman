@@ -44,7 +44,7 @@ impl Player {
         Player {
             id,
             actor_id,
-            action: 0,
+            action: 1000,
             ttl: 1,
             pnt: grd!(x, y),
             bomb_power: 2,
@@ -55,7 +55,7 @@ impl Player {
 
     /// Draw player on screen
     pub fn draw(&self) {
-        screen_put_sprite(self.pnt.x, self.pnt.y, self.actor_id, self.action)
+        screen_put_sprite(self.pnt.x, self.pnt.y, self.actor_id, self.action / 1000)
     }
 
     /// Predicate to check the player is alive
@@ -72,8 +72,12 @@ impl Player {
             self.ttl += 1;
             return;
         }
+
+        if self.action == 15 * 1000 {
+            self.action = 1000;
+        }
+
         let speed = delta / 6 * self.speed as i32; // 1frame = 16ms, speed should be 5 or so.
-        let mut action = 0;
         let mut dx = 0;
         let mut dy = 0;
 
@@ -82,19 +86,15 @@ impl Player {
 
         if key_state.left {
             dx = -speed;
-            action += 1;
         }
         if key_state.right {
             dx = speed;
-            action += 2;
         }
         if key_state.up {
             dy = -speed;
-            action += 4;
         }
         if key_state.down {
             dy = speed;
-            action += 8;
         }
         if key_state.button1 {
             let sum: i32 = bombs.iter().fold(
@@ -108,7 +108,6 @@ impl Player {
                 }
             }
         }
-        self.action = action;
 
         let dxy = self.pnt.adjust_vector_to_grid(pnt!(dx, dy));
         let new_xy = self.pnt + dxy;
@@ -122,6 +121,7 @@ impl Player {
 
         if !block_exists && !bomb_exists {
             self.pnt += dxy;
+            self.action = self.vector_to_action(dxy);
         } else {
             // XXX: Making (dx, dy) zero is bad idea. Should make (dx, dy) be shorten
             // to keep the safe distance, instead.
@@ -129,8 +129,41 @@ impl Player {
 
         let fire_exists = gs.fires().iter().any(|f| self.pnt.collides_with(f.pnt));
         if fire_exists {
-            self.action = 15;
+            self.action = 15 * 1000;
             self.ttl = -60 * 8;
+        }
+    }
+
+    /// Select animation pattern from delta and current action
+    ///
+    /// We have 12 action-images in sprites.png
+    /// No 1, 4, 7, 10 is the base action
+    ///
+    /// 0 front-right-leg
+    /// 1 front-stay
+    /// 2 front-left-leg
+    /// 3 left-right-leg
+    /// 4 left-stay
+    /// 5 left-left-leg
+    /// 6 right-right-leg
+    /// 7 right-stay
+    /// 8 right-left-leg
+    /// 9 back-right-leg
+    /// 10 back-stay
+    /// 11 back-left-leg
+    ///
+    fn vector_to_action(&self, dxy: Vector) -> u32 {
+        if let Some(x) = dxy.cardinal_direction() {
+            let base_index = match x {
+                Direction::S => 0,
+                Direction::W => 3000,
+                Direction::E => 6000,
+                Direction::N => 9000,
+            };
+            let current_offset = self.action % 3000;
+            base_index + ((current_offset + (dxy.length() * 50) as u32) % 3000)
+        } else {
+            self.action
         }
     }
 
